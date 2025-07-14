@@ -8,7 +8,8 @@ Convert inbox emails into PodCast
 InboxCast/
 ├── services/                 # Service layer for external API integrations
 │   ├── __init__.py          # Services package initialization
-│   └── gmail_service.py     # Gmail API service implementation
+│   ├── gmail_service.py     # Gmail API service implementation
+│   └── rss_service.py       # RSS feed service implementation
 ├── main.py                  # Main application entry point
 ├── pyproject.toml          # Project configuration and dependencies
 ├── example.env             # Environment configuration template
@@ -20,8 +21,10 @@ InboxCast/
 ## Features
 
 - **Gmail API Integration**: Authenticate and read user's inbox messages
+- **RSS Feed Integration**: Parse and process RSS feeds from various sources
 - **OAuth2 Authentication**: Secure authentication flow with Google
 - **Message Processing**: Extract and display email metadata and content
+- **Feed Processing**: Extract and display RSS feed entries and metadata
 - **Extensible Architecture**: Clean service layer for future integrations
 
 ## Setup Instructions
@@ -62,7 +65,15 @@ pip install -e .
 python main.py
 ```
 
-On first run, the application will:
+The application will test both Gmail and RSS integrations:
+
+**RSS Integration (no credentials required):**
+- Tests RSS feed parsing with popular feeds
+- Displays feed metadata and entry summaries
+- Demonstrates RSS service functionality
+
+**Gmail Integration (requires credentials):**
+On first run, the Gmail integration will:
 1. Open a browser window for Google OAuth2 authentication
 2. Request permission to read your Gmail inbox
 3. Save authentication tokens for future use
@@ -76,6 +87,34 @@ The `GmailService` class provides the following methods:
 - `get_inbox_messages(max_results)`: Retrieves inbox messages
 - `extract_message_info(message)`: Extracts useful information from messages
 - `print_inbox_summary(max_results)`: Displays inbox summary for testing
+
+## RSS Service API
+
+The `RSSService` class provides the following methods:
+
+- `fetch_feed(feed_url)`: Fetches and parses an RSS feed from URL
+- `get_feed_entries(feed_url, max_entries)`: Retrieves RSS feed entries
+- `extract_entry_info(entry)`: Extracts useful information from RSS entries
+- `get_feed_info(feed_url)`: Gets metadata about the RSS feed
+- `print_feed_summary(feed_url, max_entries)`: Displays feed summary for testing
+
+### RSS Service Usage Example
+
+```python
+from services import RSSService
+
+# Initialize RSS service
+rss_service = RSSService()
+
+# Get feed entries
+entries = rss_service.get_feed_entries("https://example.com/feed.xml", max_entries=10)
+
+# Get feed information
+feed_info = rss_service.get_feed_info("https://example.com/feed.xml")
+
+# Print feed summary
+rss_service.print_feed_summary("https://example.com/feed.xml", max_entries=5)
+```
 
 ## Security Notes
 
@@ -100,5 +139,8 @@ The `GmailService` class provides the following methods:
 
 - Add email content processing for podcast generation
 - Implement email filtering and categorization
+- Add RSS feed content processing for podcast generation
+- Implement RSS feed subscription management
 - Add text-to-speech integration
+- Create unified content processing pipeline for both emails and RSS feeds
 - Create web interface for better user experience
