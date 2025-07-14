@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
+
+    - name: Install dependencies
+      run: |
+        uv sync --extra test
+
+    - name: Run linter (ruff)
+      run: |
+        uv run ruff check services/ models/ tests/
+      continue-on-error: true
+
+    - name: Run formatter (ruff format)
+      run: |
+        uv run ruff format --check services/ models/ tests/
+      continue-on-error: true
+
+    - name: Run tests with pytest
+      run: |
+        uv run pytest tests/ --cov=services --cov=models --cov-report=xml --cov-report=term-missing
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
+      continue-on-error: true
+
+  type-check:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
+
+    - name: Install dependencies
+      run: |
+        uv sync --extra test
+
+    - name: Run type checker (mypy)
+      run: |
+        uv run mypy services/ models/
+      continue-on-error: true

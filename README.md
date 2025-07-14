@@ -31,10 +31,20 @@ InboxCast/
 
 ### 1. Install Dependencies
 
-This project uses Python 3.12+ and pip for dependency management:
+This project uses Python 3.12+ and uv for dependency management:
 
 ```bash
-pip install -e .
+# Install uv if not already installed
+pip install uv
+
+# Install project dependencies
+uv sync
+
+# Install with test dependencies for development
+uv sync --extra test
+
+# Install with development dependencies (linting, type checking)
+uv sync --extra dev
 ```
 
 ### 2. Google Cloud Console Setup
@@ -62,7 +72,7 @@ pip install -e .
 ### 4. Run the Application
 
 ```bash
-python main.py
+uv run python main.py
 ```
 
 The application will test both Gmail and RSS integrations:
@@ -78,6 +88,64 @@ On first run, the Gmail integration will:
 2. Request permission to read your Gmail inbox
 3. Save authentication tokens for future use
 4. Display a summary of your recent inbox messages
+
+## Testing
+
+This project includes comprehensive unit tests for all services and models.
+
+### Running Tests
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run tests with coverage report
+uv run pytest --cov=services --cov=models --cov-report=term-missing
+
+# Run tests in verbose mode
+uv run pytest -v
+
+# Run specific test file
+uv run pytest tests/test_gmail_service.py
+
+# Run specific test class or method
+uv run pytest tests/test_gmail_service.py::TestGmailService::test_authenticate_with_valid_existing_token
+```
+
+### Test Structure
+
+```
+tests/
+├── __init__.py
+├── test_content_model.py     # Tests for Pydantic ContentItem model
+├── test_gmail_service.py     # Tests for Gmail API service with mocked responses
+└── test_rss_service.py       # Tests for RSS service with mocked feeds
+```
+
+### Test Coverage
+
+The test suite aims for high coverage and includes:
+
+- **Gmail Service Tests**: Mock Gmail API responses to test authentication, message fetching, and error handling
+- **RSS Service Tests**: Mock HTTP requests and RSS feeds to test feed parsing and content extraction
+- **Content Model Tests**: Validate Pydantic model behavior, validation, and serialization
+- **Error Handling**: Test various failure scenarios and edge cases
+
+### Development Tools
+
+```bash
+# Run linter
+uv run ruff check services/ models/ tests/
+
+# Run formatter
+uv run ruff format services/ models/ tests/
+
+# Run type checker
+uv run mypy services/ models/
+
+# Install all development dependencies
+uv sync --extra dev --extra test
+```
 
 ## Gmail Service API
 
