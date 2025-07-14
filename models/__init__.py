@@ -5,4 +5,4 @@ Contains data models for content from different sources.
 
 from .content_model import ContentItem
 
-__all__ = ['ContentItem']
+__all__ = ["ContentItem"]
