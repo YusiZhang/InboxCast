@@ -9,6 +9,8 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
+from models import ContentItem
+
 
 class GmailService:
     """Service class for Gmail API integration."""
@@ -67,7 +69,7 @@ class GmailService:
             print(f"Authentication failed: {str(e)}")
             return False
     
-    def get_inbox_messages(self, max_results: int = 10) -> Optional[List[Dict[str, Any]]]:
+    def get_inbox_messages(self, max_results: int = 10) -> Optional[List[ContentItem]]:
         """
         Get messages from the user's inbox.
         
@@ -75,7 +77,7 @@ class GmailService:
             max_results: Maximum number of messages to retrieve
             
         Returns:
-            List of message dictionaries or None if error
+            List of ContentItem instances or None if error
         """
         if not self.service:
             print("Error: Gmail service not authenticated. Call authenticate() first.")
@@ -99,7 +101,8 @@ class GmailService:
                 msg = self.service.users().messages().get(
                     userId='me', id=message['id'], format='full'
                 ).execute()
-                detailed_messages.append(msg)
+                content_item = self.extract_message_info(msg)
+                detailed_messages.append(content_item)
             
             return detailed_messages
             
@@ -107,7 +110,7 @@ class GmailService:
             print(f"Error retrieving inbox messages: {str(e)}")
             return None
     
-    def extract_message_info(self, message: Dict[str, Any]) -> Dict[str, str]:
+    def extract_message_info(self, message: Dict[str, Any]) -> ContentItem:
         """
         Extract useful information from a Gmail message.
         
@@ -115,7 +118,7 @@ class GmailService:
             message: Gmail message object
             
         Returns:
-            Dictionary with extracted message information
+            ContentItem with extracted message information
         """
         headers = message['payload'].get('headers', [])
         
@@ -127,14 +130,18 @@ class GmailService:
         # Extract message body (simplified - gets plain text if available)
         body = self._extract_body(message['payload'])
         
-        return {
-            'id': message['id'],
-            'subject': subject,
-            'sender': sender,
-            'date': date,
-            'body': body,
-            'snippet': message.get('snippet', '')
-        }
+        return ContentItem(
+            title=subject,
+            source='Gmail',
+            author=sender,
+            content=body or message.get('snippet', ''),
+            metadata={
+                'id': message['id'],
+                'date': date,
+                'snippet': message.get('snippet', ''),
+                'labels': message.get('labelIds', [])
+            }
+        )
     
     def _extract_body(self, payload: Dict[str, Any]) -> str:
         """
@@ -179,10 +186,9 @@ class GmailService:
         print(f"\n=== INBOX SUMMARY ({len(messages)} messages) ===")
         print("-" * 60)
         
-        for i, message in enumerate(messages, 1):
-            info = self.extract_message_info(message)
-            print(f"{i}. Subject: {info['subject']}")
-            print(f"   From: {info['sender']}")
-            print(f"   Date: {info['date']}")
-            print(f"   Snippet: {info['snippet'][:100]}...")
+        for i, content_item in enumerate(messages, 1):
+            print(f"{i}. Subject: {content_item.title}")
+            print(f"   From: {content_item.author}")
+            print(f"   Date: {content_item.metadata.get('date', 'Unknown')}")
+            print(f"   Snippet: {content_item.metadata.get('snippet', '')[:100]}...")
             print("-" * 60)

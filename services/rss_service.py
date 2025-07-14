@@ -7,6 +7,8 @@ import requests
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
+from models import ContentItem
+
 
 class RSSService:
     """Service class for RSS feed integration."""
@@ -52,7 +54,7 @@ class RSSService:
             print(f"Error parsing RSS feed: {str(e)}")
             return None
     
-    def get_feed_entries(self, feed_url: str, max_entries: int = 10) -> Optional[List[Dict[str, Any]]]:
+    def get_feed_entries(self, feed_url: str, max_entries: int = 10) -> Optional[List[ContentItem]]:
         """
         Get entries from an RSS feed.
         
@@ -61,7 +63,7 @@ class RSSService:
             max_entries: Maximum number of entries to retrieve
             
         Returns:
-            List of entry dictionaries or None if error
+            List of ContentItem instances or None if error
         """
         feed = self.fetch_feed(feed_url)
         
@@ -75,20 +77,21 @@ class RSSService:
         # Extract information from entries
         entries = []
         for entry in feed.entries[:max_entries]:
-            entry_info = self.extract_entry_info(entry)
-            entries.append(entry_info)
+            content_item = self.extract_entry_info(entry, feed_url)
+            entries.append(content_item)
         
         return entries
     
-    def extract_entry_info(self, entry: feedparser.FeedParserDict) -> Dict[str, Any]:
+    def extract_entry_info(self, entry: feedparser.FeedParserDict, feed_url: str) -> ContentItem:
         """
         Extract useful information from an RSS entry.
         
         Args:
             entry: RSS entry object
+            feed_url: URL of the RSS feed (for source attribution)
             
         Returns:
-            Dictionary with extracted entry information
+            ContentItem with extracted entry information
         """
         # Get published date
         published = getattr(entry, 'published', '')
@@ -109,15 +112,18 @@ class RSSService:
         # Get author
         author = getattr(entry, 'author', 'Unknown Author')
         
-        return {
-            'title': getattr(entry, 'title', 'No Title'),
-            'link': getattr(entry, 'link', ''),
-            'author': author,
-            'published': published,
-            'content': content,
-            'summary': getattr(entry, 'summary', ''),
-            'id': getattr(entry, 'id', getattr(entry, 'link', ''))
-        }
+        return ContentItem(
+            title=getattr(entry, 'title', 'No Title'),
+            source=f'RSS: {feed_url}',
+            author=author,
+            content=content,
+            metadata={
+                'link': getattr(entry, 'link', ''),
+                'published': published,
+                'summary': getattr(entry, 'summary', ''),
+                'id': getattr(entry, 'id', getattr(entry, 'link', ''))
+            }
+        )
     
     def get_feed_info(self, feed_url: str) -> Optional[Dict[str, str]]:
         """
@@ -176,12 +182,12 @@ class RSSService:
         print(f"\n=== RECENT ENTRIES ({len(entries)} entries) ===")
         print("-" * 60)
         
-        for i, entry in enumerate(entries, 1):
-            print(f"{i}. Title: {entry['title']}")
-            print(f"   Author: {entry['author']}")
-            print(f"   Published: {entry['published']}")
-            print(f"   Link: {entry['link']}")
-            if entry['summary']:
-                summary = entry['summary'][:100].replace('\n', ' ').replace('\r', ' ')
+        for i, content_item in enumerate(entries, 1):
+            print(f"{i}. Title: {content_item.title}")
+            print(f"   Author: {content_item.author}")
+            print(f"   Published: {content_item.metadata.get('published', 'Unknown')}")
+            print(f"   Link: {content_item.metadata.get('link', '')}")
+            if content_item.metadata.get('summary'):
+                summary = content_item.metadata['summary'][:100].replace('\n', ' ').replace('\r', ' ')
                 print(f"   Summary: {summary}...")
             print("-" * 60)
