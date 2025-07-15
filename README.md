@@ -9,7 +9,19 @@ InboxCast/
 ├── services/                 # Service layer for external API integrations
 │   ├── __init__.py          # Services package initialization
 │   ├── gmail_service.py     # Gmail API service implementation
+│   ├── minimax_service.py   # MiniMax AI voice-over service implementation
 │   └── rss_service.py       # RSS feed service implementation
+├── models/                   # Data models for different content types
+│   ├── __init__.py          # Models package initialization
+│   ├── content_model.py     # Content item model for emails/RSS
+│   └── voiceover_model.py   # Voice-over request/response models
+├── tests/                    # Comprehensive test suite
+│   ├── __init__.py          # Tests package initialization
+│   ├── test_content_model.py    # Tests for content models
+│   ├── test_gmail_service.py    # Tests for Gmail service
+│   ├── test_minimax_service.py  # Tests for MiniMax service
+│   ├── test_rss_service.py      # Tests for RSS service
+│   └── test_voiceover_model.py  # Tests for voice-over models
 ├── main.py                  # Main application entry point
 ├── pyproject.toml          # Project configuration and dependencies
 ├── example.env             # Environment configuration template
@@ -22,9 +34,11 @@ InboxCast/
 
 - **Gmail API Integration**: Authenticate and read user's inbox messages
 - **RSS Feed Integration**: Parse and process RSS feeds from various sources
+- **MiniMax Voice-over Integration**: Convert text content to audio using MiniMax AI text-to-speech
 - **OAuth2 Authentication**: Secure authentication flow with Google
 - **Message Processing**: Extract and display email metadata and content
 - **Feed Processing**: Extract and display RSS feed entries and metadata
+- **Voice-over Generation**: Generate audio content from text with customizable parameters
 - **Extensible Architecture**: Clean service layer for future integrations
 
 ## Setup Instructions
@@ -69,13 +83,28 @@ uv sync --extra dev
    ```
 2. Edit `local.env` with your project configuration (optional)
 
-### 4. Run the Application
+### 4. MiniMax AI Setup (Optional)
+
+For voice-over functionality:
+
+1. Create an account at [MiniMax AI Platform](https://platform.minimax.chat/)
+2. Obtain your API key from the dashboard
+3. Set the environment variable:
+   ```bash
+   export MINIMAX_API_KEY="your_api_key_here"
+   ```
+   Or add it to your `local.env` file:
+   ```
+   MINIMAX_API_KEY=your_api_key_here
+   ```
+
+### 5. Run the Application
 
 ```bash
 uv run python main.py
 ```
 
-The application will test both Gmail and RSS integrations:
+The application will test Gmail, RSS, and MiniMax integrations:
 
 **RSS Integration (no credentials required):**
 - Tests RSS feed parsing with popular feeds
@@ -88,6 +117,13 @@ On first run, the Gmail integration will:
 2. Request permission to read your Gmail inbox
 3. Save authentication tokens for future use
 4. Display a summary of your recent inbox messages
+
+**MiniMax Voice-over Integration (requires API key):**
+When API key is configured:
+1. Tests connection to MiniMax AI API
+2. Generates sample voice-over from text
+3. Demonstrates text-to-speech functionality with customizable parameters
+4. Saves generated audio to file for verification
 
 ## Testing
 
@@ -117,9 +153,11 @@ uv run pytest tests/test_gmail_service.py::TestGmailService::test_authenticate_w
 ```
 tests/
 ├── __init__.py
-├── test_content_model.py     # Tests for Pydantic ContentItem model
-├── test_gmail_service.py     # Tests for Gmail API service with mocked responses
-└── test_rss_service.py       # Tests for RSS service with mocked feeds
+├── test_content_model.py       # Tests for Pydantic ContentItem model
+├── test_gmail_service.py       # Tests for Gmail API service with mocked responses
+├── test_minimax_service.py     # Tests for MiniMax AI service with mocked API calls
+├── test_rss_service.py         # Tests for RSS service with mocked feeds
+└── test_voiceover_model.py     # Tests for voice-over request/response models
 ```
 
 ### Test Coverage
@@ -128,7 +166,9 @@ The test suite aims for high coverage and includes:
 
 - **Gmail Service Tests**: Mock Gmail API responses to test authentication, message fetching, and error handling
 - **RSS Service Tests**: Mock HTTP requests and RSS feeds to test feed parsing and content extraction
+- **MiniMax Service Tests**: Mock API responses to test voice-over generation, file saving, and error handling
 - **Content Model Tests**: Validate Pydantic model behavior, validation, and serialization
+- **Voice-over Model Tests**: Test voice-over request/response models with comprehensive validation
 - **Error Handling**: Test various failure scenarios and edge cases
 
 ### Development Tools
@@ -165,6 +205,52 @@ The `RSSService` class provides the following methods:
 - `extract_entry_info(entry)`: Extracts useful information from RSS entries
 - `get_feed_info(feed_url)`: Gets metadata about the RSS feed
 - `print_feed_summary(feed_url, max_entries)`: Displays feed summary for testing
+
+## MiniMax Service API
+
+The `MiniMaxService` class provides the following methods:
+
+- `generate_voice_over(request)`: Generates voice-over audio from VoiceOverRequest
+- `save_audio_to_file(response, file_path)`: Saves audio data to file
+- `test_connection()`: Tests connection to MiniMax API
+
+### Voice-over Request Parameters
+
+The `VoiceOverRequest` model supports these parameters:
+
+- `text` (required): Text content to be voiced over
+- `tone`: Voice tone style (`neutral`, `friendly`, `professional`, `energetic`, `calm`)
+- `speed`: Speech speed multiplier (0.5 to 2.0, default: 1.0)
+- `language`: Target language (`en-US`, `zh-CN`, `ja-JP`, `ko-KR`, `es-ES`, `fr-FR`, `de-DE`)
+- `voice_id` (optional): Specific voice model ID
+
+### MiniMax Service Usage Example
+
+```python
+from services import MiniMaxService
+from models import VoiceOverRequest
+
+# Initialize MiniMax service
+minimax_service = MiniMaxService()  # Uses MINIMAX_API_KEY environment variable
+
+# Create voice-over request
+request = VoiceOverRequest(
+    text="Welcome to InboxCast!",
+    tone="friendly",
+    speed=1.2,
+    language="en-US"
+)
+
+# Generate voice-over
+response = minimax_service.generate_voice_over(request)
+
+if response.success:
+    # Save audio to file
+    if minimax_service.save_audio_to_file(response, "output.mp3"):
+        print("Audio saved successfully!")
+else:
+    print(f"Error: {response.error_message}")
+```
 
 ### RSS Service Usage Example
 
@@ -209,6 +295,9 @@ rss_service.print_feed_summary("https://example.com/feed.xml", max_entries=5)
 - Implement email filtering and categorization
 - Add RSS feed content processing for podcast generation
 - Implement RSS feed subscription management
-- Add text-to-speech integration
+- ✅ **Text-to-speech integration** (Completed with MiniMax AI)
 - Create unified content processing pipeline for both emails and RSS feeds
+- Add voice-over customization (different voices, advanced tone controls)
+- Implement batch processing for multiple content items
+- Add audio format conversion and optimization
 - Create web interface for better user experience
