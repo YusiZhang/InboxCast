@@ -4,16 +4,17 @@ Main entry point for testing Gmail API and RSS integration.
 """
 
 import os
+
 from services import GmailService, RSSService
 
 
 def test_gmail_integration():
     """Test Gmail API integration."""
     print("=== InboxCast - Gmail API Integration Test ===")
-    
+
     # Initialize Gmail service
     gmail_service = GmailService()
-    
+
     # Check for credentials file
     if not os.path.exists('credentials.json'):
         print("\nError: credentials.json not found!")
@@ -25,22 +26,22 @@ def test_gmail_integration():
         print("5. Download credentials and save as 'credentials.json' in project root")
         print("\nSee README.md for detailed setup instructions.")
         return False
-    
+
     # Authenticate with Gmail API
     print("\nAuthenticating with Gmail API...")
     if not gmail_service.authenticate():
         print("Authentication failed. Please check your credentials.")
         return False
-    
+
     print("Authentication successful!")
-    
+
     # Test inbox reading
     print("\nReading inbox messages...")
     try:
         gmail_service.print_inbox_summary(max_results=5)
         print("\nGmail API integration test completed successfully!")
         return True
-        
+
     except Exception as e:
         print(f"Error during inbox reading: {str(e)}")
         return False
@@ -49,19 +50,19 @@ def test_gmail_integration():
 def test_rss_integration():
     """Test RSS feed integration."""
     print("\n\n=== InboxCast - RSS Integration Test ===")
-    
+
     # Initialize RSS service
     rss_service = RSSService()
-    
+
     # Test with some popular RSS feeds
     test_feeds = [
         "https://feeds.feedburner.com/oreilly/radar",  # O'Reilly Radar
         "https://rss.cnn.com/rss/edition.rss",         # CNN
         "https://feeds.feedburner.com/TechCrunch",     # TechCrunch
     ]
-    
+
     success_count = 0
-    
+
     for feed_url in test_feeds:
         print(f"\nTesting RSS feed: {feed_url}")
         try:
@@ -73,10 +74,10 @@ def test_rss_integration():
                 success_count += 1
             else:
                 print("✗ Could not fetch feed (network may be limited in this environment)")
-            
+
         except Exception as e:
             print(f"✗ Error testing RSS feed: {str(e)}")
-    
+
     # Test with local example if available
     try:
         import feedparser
@@ -93,16 +94,16 @@ def test_rss_integration():
     </item>
   </channel>
 </rss>'''
-        
+
         feed = feedparser.parse(test_feed_content)
         if feed.entries:
-            print(f"\n✓ Local RSS parsing test successful!")
+            print("\n✓ Local RSS parsing test successful!")
             print(f"  Feed Title: {feed.feed.get('title', 'Unknown')}")
             print(f"  Sample Entry: {feed.entries[0].get('title', 'Unknown')}")
             success_count += 1
     except Exception as e:
         print(f"✗ Local RSS test failed: {str(e)}")
-    
+
     print(f"\nRSS integration test completed: {success_count} tests successful")
     return success_count > 0
 
@@ -110,13 +111,13 @@ def test_rss_integration():
 def main():
     """Main function to test both Gmail API and RSS integration."""
     print("=== InboxCast - Testing Gmail and RSS Integration ===\n")
-    
+
     # Test RSS integration (doesn't require credentials)
     rss_success = test_rss_integration()
-    
+
     # Test Gmail integration (requires credentials)
     gmail_success = test_gmail_integration()
-    
+
     print("\n" + "="*60)
     print("INTEGRATION TEST SUMMARY:")
     print(f"RSS Integration: {'✓ SUCCESS' if rss_success else '✗ FAILED'}")
