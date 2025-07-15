@@ -12,6 +12,11 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.12"]
+    
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+      GMAIL_CREDENTIALS_JSON: ${{ secrets.GMAIL_CREDENTIALS_JSON }}
 
     steps:
     - name: Checkout code
@@ -26,6 +31,15 @@ jobs:
       uses: astral-sh/setup-uv@v4
       with:
         version: "latest"
+
+    - name: Create credentials.json from environment variable
+      run: |
+        if [ -n "$GMAIL_CREDENTIALS_JSON" ]; then
+          echo "$GMAIL_CREDENTIALS_JSON" > credentials.json
+          echo "✓ Created credentials.json from environment variable"
+        else
+          echo "⚠️ GMAIL_CREDENTIALS_JSON not set - Gmail integration will be skipped"
+        fi
 
     - name: Install dependencies
       run: |
@@ -45,6 +59,27 @@ jobs:
       run: |
         uv run pytest tests/ --cov=services --cov=models --cov-report=xml --cov-report=term-missing
 
+    - name: Test webapp demo startup
+      run: |
+        echo "Testing InboxCast webapp demo startup..."
+        timeout 30s uv run python -m app.main &
+        SERVER_PID=$!
+        sleep 10
+        if curl -f http://localhost:8000/health > /dev/null 2>&1; then
+          echo "✓ Webapp started successfully"
+          kill $SERVER_PID
+        else
+          echo "⚠️ Webapp health check failed - checking if server is responsive"
+          if curl -f http://localhost:8000/ > /dev/null 2>&1; then
+            echo "✓ Webapp is responsive on root endpoint"
+            kill $SERVER_PID
+          else
+            echo "✗ Webapp failed to start or is not responsive"
+            kill $SERVER_PID
+            exit 1
+          fi
+        fi
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
@@ -54,6 +89,12 @@ jobs:
 
   type-check:
     runs-on: ubuntu-latest
+    
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+      GMAIL_CREDENTIALS_JSON: ${{ secrets.GMAIL_CREDENTIALS_JSON }}
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -67,6 +108,15 @@ jobs:
       uses: astral-sh/setup-uv@v4
       with:
         version: "latest"
+
+    - name: Create credentials.json from environment variable
+      run: |
+        if [ -n "$GMAIL_CREDENTIALS_JSON" ]; then
+          echo "$GMAIL_CREDENTIALS_JSON" > credentials.json
+          echo "✓ Created credentials.json from environment variable"
+        else
+          echo "⚠️ GMAIL_CREDENTIALS_JSON not set - Gmail integration will be skipped"
+        fi
 
     - name: Install dependencies
       run: |

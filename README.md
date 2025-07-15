@@ -75,7 +75,24 @@ uv sync --extra test
 uv sync --extra dev
 ```
 
-### 2. Google Cloud Console Setup
+### 2. GitHub CI Environment Variables
+
+If you're setting up this project in GitHub CI/CD, you need to configure the following environment variables in your GitHub repository settings (Settings → Secrets and variables → Actions):
+
+#### Required Environment Variables:
+
+- **`GEMINI_API_KEY`**: Your Google Gemini AI API key
+  - Get this from: [Google AI Studio](https://makersuite.google.com/app/apikey)
+  
+- **`MINIMAX_API_KEY`**: Your MiniMax AI API key for voice-over generation
+  - Get this from: [MiniMax AI Platform](https://platform.minimax.chat/)
+  
+- **`GMAIL_CREDENTIALS_JSON`**: The complete content of your Gmail OAuth2 credentials file as plain text
+  - Download the OAuth2 credentials from Google Cloud Console as described below
+  - Copy the entire JSON content and paste it as the environment variable value
+  - The CI will automatically recreate the `credentials.json` file from this variable
+
+### 3. Google Cloud Console Setup
 
 #### Gmail API Setup
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
@@ -95,7 +112,9 @@ uv sync --extra dev
 2. Create a new API key for the Gemini API
 3. Copy the API key for use in the next step
 
-### 3. Environment Configuration
+### 4. Environment Configuration
+
+#### For Local Development:
 
 1. Copy the example environment file:
    ```bash
@@ -110,7 +129,11 @@ uv sync --extra dev
    # (Gmail credentials are stored in credentials.json)
    ```
 
-### 4. MiniMax AI Setup (Optional)
+#### For GitHub CI:
+
+The GitHub CI environment is automatically configured using the environment variables you set in GitHub repository settings. No additional configuration files are needed - the CI will recreate `credentials.json` from the `GMAIL_CREDENTIALS_JSON` environment variable.
+
+### 5. MiniMax AI Setup (Optional)
 
 For voice-over functionality:
 
@@ -125,7 +148,7 @@ For voice-over functionality:
    MINIMAX_API_KEY=your_api_key_here
    ```
 
-### 5. Run the Application
+### 6. Run the Application
 
 ```bash
 uv run python main.py
