@@ -5,7 +5,7 @@ Main entry point for testing Gmail API and RSS integration.
 
 import os
 
-from services import GmailService, RSSService
+from services import GeminiService, GmailService, RSSService
 
 
 def test_gmail_integration():
@@ -108,9 +108,36 @@ def test_rss_integration():
     return success_count > 0
 
 
+def test_gemini_integration():
+    """Test Google Gemini API integration."""
+    print("\n\n=== InboxCast - Google Gemini API Integration Test ===")
+
+    # Initialize Gemini service
+    gemini_service = GeminiService()
+
+    # Check for API key
+    if not gemini_service.api_key:
+        print("\nError: No Gemini API key found!")
+        print("Please set GEMINI_API_KEY environment variable or provide api_key parameter.")
+        print("Get your API key from: https://makersuite.google.com/app/apikey")
+        print("\nSee README.md for detailed setup instructions.")
+        return False
+
+    # Test Gemini API
+    print("\nTesting Gemini API...")
+    try:
+        gemini_service.print_generation_test()
+        print("\nGemini API integration test completed successfully!")
+        return True
+
+    except Exception as e:
+        print(f"Error during Gemini API test: {str(e)}")
+        return False
+
+
 def main():
-    """Main function to test both Gmail API and RSS integration."""
-    print("=== InboxCast - Testing Gmail and RSS Integration ===\n")
+    """Main function to test Gmail, RSS, and Gemini integration."""
+    print("=== InboxCast - Testing Gmail, RSS, and Gemini Integration ===\n")
 
     # Test RSS integration (doesn't require credentials)
     rss_success = test_rss_integration()
@@ -118,10 +145,14 @@ def main():
     # Test Gmail integration (requires credentials)
     gmail_success = test_gmail_integration()
 
+    # Test Gemini integration (requires API key)
+    gemini_success = test_gemini_integration()
+
     print("\n" + "="*60)
     print("INTEGRATION TEST SUMMARY:")
     print(f"RSS Integration: {'✓ SUCCESS' if rss_success else '✗ FAILED'}")
     print(f"Gmail Integration: {'✓ SUCCESS' if gmail_success else '✗ FAILED (credentials needed)'}")
+    print(f"Gemini Integration: {'✓ SUCCESS' if gemini_success else '✗ FAILED (API key needed)'}")
     print("="*60)
 
 
