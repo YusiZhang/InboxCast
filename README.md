@@ -6,6 +6,16 @@ Convert inbox emails into PodCast
 
 ```
 InboxCast/
+├── app/                     # Demo web application
+│   ├── main.py              # FastAPI web server
+│   ├── routers/             # API route handlers
+│   │   ├── auth.py          # Gmail OAuth2 endpoints
+│   │   ├── rss.py           # RSS feed endpoints
+│   │   ├── content.py       # AI content generation endpoints
+│   │   └── audio.py         # Audio generation endpoints
+│   ├── static/              # Frontend assets (CSS, JS)
+│   ├── templates/           # HTML templates
+│   └── README.md            # Web app documentation
 ├── services/                 # Service layer for external API integrations
 │   ├── __init__.py          # Services package initialization
 │   ├── gemini_service.py    # Google Gemini API service implementation
@@ -38,6 +48,7 @@ InboxCast/
 - **RSS Feed Integration**: Parse and process RSS feeds from various sources
 - **Google Gemini AI Integration**: Generate and enhance content using Google's Gemini AI
 - **MiniMax Voice-over Integration**: Convert text content to audio using MiniMax AI text-to-speech
+- **Demo Web Application**: Complete frontend and backend web app showcasing end-to-end functionality
 - **OAuth2 Authentication**: Secure authentication flow with Google
 - **Message Processing**: Extract and display email metadata and content
 - **Feed Processing**: Extract and display RSS feed entries and metadata
@@ -119,6 +130,19 @@ For voice-over functionality:
 ```bash
 uv run python main.py
 ```
+
+**For the Demo Web App:**
+
+```bash
+# Start the web application
+uv run python -m app.main
+
+# Or use the convenience script
+chmod +x start_webapp.sh
+./start_webapp.sh
+```
+
+The web app will be available at http://localhost:8000 with an interactive demo interface.
 
 The application will test Gmail, RSS, MiniMax, and Gemini integrations:
 

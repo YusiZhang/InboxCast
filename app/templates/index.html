@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InboxCast Demo</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎙️ InboxCast Demo</h1>
+            <p>Convert your emails and RSS feeds into podcast-style audio content</p>
+        </header>
+
+        <div class="demo-section">
+            <h2>🔐 Step 1: Authentication</h2>
+            <div class="auth-section">
+                <div id="auth-status" class="status-indicator">
+                    <span id="auth-text">Checking authentication...</span>
+                </div>
+                <button id="login-btn" class="btn btn-primary" onclick="loginWithGmail()">
+                    Sign in with Google Gmail
+                </button>
+                <button id="logout-btn" class="btn btn-secondary" onclick="logout()" style="display: none;">
+                    Logout
+                </button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>📰 Step 2: RSS Feed Input</h2>
+            <div class="rss-section">
+                <div class="input-group">
+                    <input type="url" id="rss-url" placeholder="Enter RSS feed URL (e.g., https://feeds.example.com/news)" 
+                           class="input-field">
+                    <button id="fetch-rss-btn" class="btn btn-primary" onclick="fetchRSSFeed()">
+                        Fetch RSS Feed
+                    </button>
+                </div>
+                <button id="test-rss-btn" class="btn btn-secondary" onclick="testRSSFeed()">
+                    Use Test RSS Feed
+                </button>
+                <div id="rss-results" class="results-container"></div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🤖 Step 3: AI Content Generation</h2>
+            <div class="content-section">
+                <div class="settings-group">
+                    <div class="setting">
+                        <label for="tone-select">Tone:</label>
+                        <select id="tone-select" class="select-field">
+                            <option value="neutral">Neutral</option>
+                            <option value="friendly" selected>Friendly</option>
+                            <option value="professional">Professional</option>
+                            <option value="energetic">Energetic</option>
+                            <option value="casual">Casual</option>
+                        </select>
+                    </div>
+                    <div class="setting">
+                        <label for="language-select">Language:</label>
+                        <select id="language-select" class="select-field">
+                            <option value="en-US" selected>English (US)</option>
+                            <option value="zh-CN">Chinese (Simplified)</option>
+                            <option value="ja-JP">Japanese</option>
+                            <option value="ko-KR">Korean</option>
+                            <option value="es-ES">Spanish</option>
+                            <option value="fr-FR">French</option>
+                            <option value="de-DE">German</option>
+                        </select>
+                    </div>
+                    <div class="setting">
+                        <label for="max-words">Max Words:</label>
+                        <input type="number" id="max-words" value="300" min="100" max="1000" class="input-field small">
+                    </div>
+                    <div class="setting">
+                        <label for="style-select">Style:</label>
+                        <select id="style-select" class="select-field">
+                            <option value="summary" selected>Summary</option>
+                            <option value="detailed">Detailed</option>
+                            <option value="headlines">Headlines</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="generate-content-btn" class="btn btn-primary" onclick="generateContent()">
+                    Generate AI Content
+                </button>
+                <button id="test-content-btn" class="btn btn-secondary" onclick="testContentGeneration()">
+                    Test with Sample Data
+                </button>
+                <div id="content-results" class="results-container"></div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎵 Step 4: Audio Generation</h2>
+            <div class="audio-section">
+                <div class="settings-group">
+                    <div class="setting">
+                        <label for="audio-tone-select">Voice Tone:</label>
+                        <select id="audio-tone-select" class="select-field">
+                            <option value="neutral">Neutral</option>
+                            <option value="friendly" selected>Friendly</option>
+                            <option value="professional">Professional</option>
+                            <option value="energetic">Energetic</option>
+                            <option value="calm">Calm</option>
+                        </select>
+                    </div>
+                    <div class="setting">
+                        <label for="speed-select">Speech Speed:</label>
+                        <select id="speed-select" class="select-field">
+                            <option value="0.8">Slow (0.8x)</option>
+                            <option value="1.0" selected>Normal (1.0x)</option>
+                            <option value="1.2">Fast (1.2x)</option>
+                            <option value="1.5">Very Fast (1.5x)</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="generate-audio-btn" class="btn btn-primary" onclick="generateAudio()">
+                    Generate Audio
+                </button>
+                <button id="test-audio-btn" class="btn btn-secondary" onclick="testAudioGeneration()">
+                    Test Audio Generation
+                </button>
+                <div id="audio-results" class="results-container"></div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎧 Step 5: Audio Playback</h2>
+            <div class="playback-section">
+                <div id="audio-player-container" style="display: none;">
+                    <audio id="audio-player" controls style="width: 100%;">
+                        Your browser does not support the audio element.
+                    </audio>
+                    <div class="audio-info">
+                        <p id="audio-info-text">Audio ready for playback</p>
+                    </div>
+                </div>
+                <div id="no-audio-message" class="info-message">
+                    Generate audio content above to enable playback
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🔄 Complete End-to-End Demo</h2>
+            <div class="complete-demo-section">
+                <p>Run the complete workflow: Gmail/RSS → AI Content → Audio Generation</p>
+                <button id="complete-demo-btn" class="btn btn-success" onclick="runCompleteDemo()">
+                    Run Complete Demo
+                </button>
+                <div id="complete-demo-progress" class="progress-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>InboxCast Demo - Powered by Google Gemini AI & MiniMax AI</p>
+    </footer>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
