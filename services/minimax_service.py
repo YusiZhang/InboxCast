@@ -101,7 +101,7 @@ class MiniMaxService:
                     )
                     return VoiceOverResponse(success=False, error_message=error_msg)
             else:
-                error_msg = f"API request failed with status {response.status_code}"
+                error_msg = f"API request failed with status {response.status_code}: {response.text}"
                 try:
                     error_data = response.json()
                     if "message" in error_data:
