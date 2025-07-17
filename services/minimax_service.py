@@ -12,22 +12,30 @@ from models import VoiceOverRequest, VoiceOverResponse
 class MiniMaxService:
     """Service class for MiniMax AI text-to-speech integration."""
 
-    def __init__(self, api_key: str | None = None, base_url: str | None = None):
+    def __init__(
+        self,
+        api_key: str | None = None,
+        group_id: str | None = None,
+        base_url: str | None = None,
+    ):
         """
         Initialize MiniMax service.
 
         Args:
             api_key: MiniMax API key. If not provided, will try to read from environment
+            group_id: MiniMax Group ID. If not provided, will try to read from environment
             base_url: Base URL for MiniMax API. Defaults to official API endpoint
         """
         self.api_key = api_key or os.getenv("MINIMAX_API_KEY")
-        self.base_url = base_url or "https://api.minimax.chat/v1/text_to_speech"
+        self.group_id = group_id or os.getenv("MINIMAX_GROUP_ID")
+        self.base_url = base_url or "https://api.minimax.io/v1/t2a_v2"
         self.session = requests.Session()
 
-        if self.api_key:
+        if self.api_key and self.group_id:
             self.session.headers.update(
                 {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
             )
+            self.session.params.update({"GroupId": self.group_id})
 
     def generate_voice_over(self, request: VoiceOverRequest) -> VoiceOverResponse:
         """
@@ -39,28 +47,31 @@ class MiniMaxService:
         Returns:
             VoiceOverResponse with audio data or error information
         """
-        if not self.api_key:
+        if not self.api_key or not self.group_id:
             return VoiceOverResponse(
                 success=False,
-                error_message="MiniMax API key not provided. Set MINIMAX_API_KEY environment variable.",
+                error_message="MiniMax API key or Group ID not provided. Set MINIMAX_API_KEY and MINIMAX_GROUP_ID environment variables.",
             )
 
         try:
             # Prepare request payload for MiniMax API
             payload = {
+                "model": "speech-02-turbo",
                 "text": request.text,
+                "stream": False,
                 "voice_setting": {
-                    "tone": request.tone,
+                    "voice_id": request.voice_id,
                     "speed": request.speed,
-                    "language": request.language,
+                    "vol": request.vol,
+                    "pitch": request.pitch,
+                },
+                "audio_setting": {
+                    "sample_rate": 32000,
+                    "bitrate": 128000,
+                    "format": "mp3",
+                    "channel": 1,
                 },
             }
-
-            # Add voice_id if specified
-            if request.voice_id:
-                voice_setting = payload["voice_setting"]
-                if isinstance(voice_setting, dict):
-                    voice_setting["voice_id"] = request.voice_id
 
             # Make API request
             response = self.session.post(self.base_url, json=payload, timeout=30)
@@ -68,30 +79,27 @@ class MiniMaxService:
             if response.status_code == 200:
                 response_data = response.json()
 
-                # Handle different response formats
-                if "audio_url" in response_data:
-                    # URL-based response
-                    return VoiceOverResponse(
-                        success=True,
-                        audio_url=response_data["audio_url"],
-                        duration=response_data.get("duration"),
-                        format=response_data.get("format", "mp3"),
-                    )
-                elif "audio_data" in response_data:
-                    # Direct audio data response
-                    import base64
-
-                    audio_bytes = base64.b64decode(response_data["audio_data"])
-                    return VoiceOverResponse(
-                        success=True,
-                        audio_data=audio_bytes,
-                        duration=response_data.get("duration"),
-                        format=response_data.get("format", "mp3"),
-                    )
+                if response_data.get("base_resp", {}).get("status_code") == 0:
+                    audio_hex = response_data.get("data", {}).get("audio")
+                    if audio_hex:
+                        audio_bytes = bytes.fromhex(audio_hex)
+                        return VoiceOverResponse(
+                            success=True,
+                            audio_data=audio_bytes,
+                            audio_format=response_data.get("extra_info", {}).get(
+                                "audio_format", "mp3"
+                            ),
+                        )
+                    else:
+                        return VoiceOverResponse(
+                            success=False,
+                            error_message="No audio data in MiniMax API response",
+                        )
                 else:
-                    return VoiceOverResponse(
-                        success=False, error_message="Invalid response format from MiniMax API"
+                    error_msg = response_data.get("base_resp", {}).get(
+                        "status_msg", "Unknown API error"
                     )
+                    return VoiceOverResponse(success=False, error_message=error_msg)
             else:
                 error_msg = f"API request failed with status {response.status_code}"
                 try:
@@ -135,14 +143,6 @@ class MiniMaxService:
                 with open(file_path, "wb") as f:
                     f.write(response.audio_data)
                 return True
-            elif response.audio_url:
-                # Download audio from URL
-                audio_response = self.session.get(response.audio_url, timeout=30)
-                if audio_response.status_code == 200:
-                    with open(file_path, "wb") as f:
-                        f.write(audio_response.content)
-                    return True
-
             return False
 
         except Exception:
@@ -160,9 +160,7 @@ class MiniMaxService:
 
         try:
             # Use a minimal test request
-            test_request = VoiceOverRequest(
-                text="Test", tone="neutral", speed=1.0, language="en-US"
-            )
+            test_request = VoiceOverRequest(text="Test")
 
             response = self.generate_voice_over(test_request)
             return response.success

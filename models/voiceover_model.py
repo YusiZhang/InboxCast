@@ -21,19 +21,15 @@ class VoiceOverRequest(BaseModel):
     )
 
     text: str = Field(..., description="Text content to be voiced over", min_length=1)
-    tone: Literal["neutral", "friendly", "professional", "energetic", "calm"] = Field(
-        default="neutral", description="Voice tone style"
-    )
+    voice_id: str = Field(..., description="Specific voice model ID")
     speed: float = Field(
         default=1.0,
         description="Speech speed multiplier",
         ge=0.5,  # minimum speed
         le=2.0,  # maximum speed
     )
-    language: Literal["en-US", "zh-CN", "ja-JP", "ko-KR", "es-ES", "fr-FR", "de-DE"] = Field(
-        default="en-US", description="Language for voice-over"
-    )
-    voice_id: str | None = Field(default=None, description="Specific voice model ID (optional)")
+    vol: float = Field(default=1.0, description="Volume of the speech", ge=0.1, le=2.0)
+    pitch: float = Field(default=0.0, description="Pitch of the speech", ge=-5.0, le=5.0)
 
 
 class VoiceOverResponse(BaseModel):
@@ -42,13 +38,11 @@ class VoiceOverResponse(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="forbid",
+        extra="ignore",
         validate_assignment=True,
     )
 
     success: bool = Field(..., description="Whether the request was successful")
-    audio_url: str | None = Field(default=None, description="URL to the generated audio file")
     audio_data: bytes | None = Field(default=None, description="Binary audio data")
-    duration: float | None = Field(default=None, description="Audio duration in seconds")
-    format: str | None = Field(default=None, description="Audio format (e.g., 'mp3', 'wav')")
+    audio_format: str | None = Field(default=None, description="Audio format (e.g., 'mp3')")
     error_message: str | None = Field(default=None, description="Error message if unsuccessful")

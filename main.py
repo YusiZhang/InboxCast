@@ -137,68 +137,57 @@ def test_gemini_integration():
 def test_minimax_integration():
     """Test MiniMax AI voice-over integration."""
     print("\n\n=== InboxCast - MiniMax Voice-over Integration Test ===")
-    
+
     # Initialize MiniMax service
     minimax_service = MiniMaxService()
-    
-    # Check for API key
-    if not minimax_service.api_key:
-        print("\nMiniMax API key not found!")
+
+    # Check for API key and Group ID
+    if not minimax_service.api_key or not minimax_service.group_id:
+        print("\nMiniMax API key or Group ID not found!")
         print("To test MiniMax integration:")
-        print("1. Get an API key from MiniMax AI (https://platform.minimax.chat/)")
-        print("2. Set the MINIMAX_API_KEY environment variable")
+        print("1. Get an API key and Group ID from MiniMax AI (https://www.minimaxi.com/)")
+        print("2. Set the MINIMAX_API_KEY and MINIMAX_GROUP_ID environment variables")
         print("3. Run the test again")
-        print("\nNote: The MiniMax service is fully implemented and ready to use once you provide an API key.")
+        print(
+            "\nNote: The MiniMax service is fully implemented and ready to use once you provide the credentials."
+        )
         return False
-    
+
     print(f"\nFound MiniMax API key: {minimax_service.api_key[:8]}...")
-    
-    # Test connection
-    print("Testing connection to MiniMax API...")
-    if not minimax_service.test_connection():
-        print("✗ Connection test failed. Please check your API key and network connection.")
-        return False
-    
-    print("✓ Connection test successful!")
-    
+    print(f"Found MiniMax Group ID: {minimax_service.group_id}")
+
     # Test voice-over generation
     print("\nTesting voice-over generation...")
     try:
         # Create a test voice-over request
         test_request = VoiceOverRequest(
             text="Welcome to InboxCast! This is a test of the MiniMax voice-over integration.",
-            tone="friendly",
-            speed=1.0,
-            language="en-US"
+            voice_id="English_captivating_female1",  # Example voice_id from API doc
         )
-        
+
         # Generate voice-over
         response = minimax_service.generate_voice_over(test_request)
-        
+
         if response.success:
             print("✓ Voice-over generation successful!")
-            if response.audio_url:
-                print(f"  Audio URL: {response.audio_url}")
             if response.audio_data:
                 print(f"  Audio data size: {len(response.audio_data)} bytes")
-            if response.duration:
-                print(f"  Duration: {response.duration} seconds")
-            if response.format:
-                print(f"  Format: {response.format}")
-            
+            if response.audio_format:
+                print(f"  Format: {response.audio_format}")
+
             # Try to save the audio file
-            if response.audio_url or response.audio_data:
-                output_file = "/tmp/test_voiceover.mp3"
+            if response.audio_data:
+                output_file = f"/tmp/test_voiceover.{response.audio_format or 'mp3'}"
                 if minimax_service.save_audio_to_file(response, output_file):
                     print(f"✓ Audio saved to: {output_file}")
                 else:
                     print("✗ Failed to save audio file")
-            
+
             return True
         else:
             print(f"✗ Voice-over generation failed: {response.error_message}")
             return False
-            
+
     except Exception as e:
         print(f"✗ Error during voice-over test: {str(e)}")
         return False
