@@ -28,8 +28,8 @@ class VoiceOverRequest(BaseModel):
         ge=0.5,  # minimum speed
         le=2.0,  # maximum speed
     )
-    vol: float = Field(default=1.0, description="Volume of the speech", ge=0.1, le=2.0)
-    pitch: float = Field(default=0.0, description="Pitch of the speech", ge=-5.0, le=5.0)
+    vol: float = Field(default=1.0, description="Volume of the speech", ge=0, le=10)
+    pitch: int = Field(default=0, description="Pitch of the speech", ge=-12, le=12)
 
 
 class VoiceOverResponse(BaseModel):

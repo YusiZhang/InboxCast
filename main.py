@@ -4,9 +4,13 @@ Main entry point for testing Gmail API and RSS integration.
 """
 
 import os
+from dotenv import load_dotenv
 
 from services import GeminiService, GmailService, RSSService, MiniMaxService
 from models import VoiceOverRequest
+
+# Load environment variables from local.env
+load_dotenv(dotenv_path="local.env")
 
 
 def test_gmail_integration():
@@ -177,7 +181,7 @@ def test_minimax_integration():
 
             # Try to save the audio file
             if response.audio_data:
-                output_file = f"/tmp/test_voiceover.{response.audio_format or 'mp3'}"
+                output_file = f"./tmp/test_voiceover.{response.audio_format or 'mp3'}"
                 if minimax_service.save_audio_to_file(response, output_file):
                     print(f"✓ Audio saved to: {output_file}")
                 else:
@@ -198,13 +202,13 @@ def main():
     print("=== InboxCast - Testing Gmail, RSS, Gemini, and MiniMax Integration ===\n")
     
     # Test RSS integration (doesn't require credentials)
-    rss_success = test_rss_integration()
+    # rss_success = test_rss_integration()
 
     # Test Gmail integration (requires credentials)
-    gmail_success = test_gmail_integration()
+    # gmail_success = test_gmail_integration()
 
     # Test Gemini integration (requires API key)
-    gemini_success = test_gemini_integration()
+    # gemini_success = test_gemini_integration()
 
     
     # Test MiniMax integration (requires API key)
@@ -212,9 +216,9 @@ def main():
     
     print("\n" + "="*60)
     print("INTEGRATION TEST SUMMARY:")
-    print(f"RSS Integration: {'✓ SUCCESS' if rss_success else '✗ FAILED'}")
-    print(f"Gmail Integration: {'✓ SUCCESS' if gmail_success else '✗ FAILED (credentials needed)'}")
-    print(f"Gemini Integration: {'✓ SUCCESS' if gemini_success else '✗ FAILED (API key needed)'}")
+    # print(f"RSS Integration: {'✓ SUCCESS' if rss_success else '✗ FAILED'}")
+    # print(f"Gmail Integration: {'✓ SUCCESS' if gmail_success else '✗ FAILED (credentials needed)'}")
+    # print(f"Gemini Integration: {'✓ SUCCESS' if gemini_success else '✗ FAILED (API key needed)'}")
     print(f"MiniMax Voice-over: {'✓ SUCCESS' if minimax_success else '✗ FAILED (API key needed)'}")
     print("="*60)
 

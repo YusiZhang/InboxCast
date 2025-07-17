@@ -3,12 +3,16 @@ InboxCast FastAPI Web Application
 Main entry point for the demo web app showcasing end-to-end functionality.
 """
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 
 from app.routers import auth, rss, content, audio
+
+# Load environment variables from local.env
+load_dotenv(dotenv_path="local.env")
 
 # Create FastAPI app
 app = FastAPI(
